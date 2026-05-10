@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notes Hub · 笔记集散地</title>
+  <meta name="description" content="Free community-driven study notes platform — by students for students.">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --m:   #7a0019;
+      --md:  #4b0010;
+      --g:   #ffcc33;
+      --ink: #232b35;
+      --mu:  #5f6b76;
+      --bo:  #e3e8ef;
+      --sf:  #f7f9fb;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: var(--ink);
+      background: #fff;
+      padding-top: 48px;
+      line-height: 1.6;
+    }
+
+    a { color: var(--m); text-decoration: none; }
+    a:hover { color: var(--md); }
+
+    /* ── Topbar ── */
+    .topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 48px;
+      background: #fff;
+      border-bottom: 1px solid var(--bo);
+      box-shadow: 0 1px 4px rgba(35,43,53,.07);
+      z-index: 1000;
+    }
+    .topbar__toggle {
+      position: absolute;
+      top: 50%; left: 1rem;
+      transform: translateY(-50%);
+      width: 38px; height: 38px;
+      background: var(--m);
+      border: none; border-radius: 4px;
+      cursor: pointer;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      gap: 5px; padding: 0;
+    }
+    .topbar__toggle .bar {
+      display: block; width: 16px; height: 2px;
+      background: #fff; border-radius: 1px;
+      transition: transform .2s, opacity .2s;
+    }
+    .topbar__toggle[aria-expanded="true"] .bar:nth-child(1) { transform: rotate(45deg) translate(5px,5px); }
+    .topbar__toggle[aria-expanded="true"] .bar:nth-child(2) { opacity: 0; }
+    .topbar__toggle[aria-expanded="true"] .bar:nth-child(3) { transform: rotate(-45deg) translate(5px,-5px); }
+    .topbar__nav {
+      display: none;
+      position: absolute;
+      top: 48px; left: 0;
+      min-width: 240px;
+      background: #fff;
+      border: 1px solid var(--bo);
+      border-top: none;
+      border-radius: 0 4px 4px 4px;
+      box-shadow: 0 4px 14px rgba(35,43,53,.1);
+    }
+    .topbar__nav.open { display: block; }
+    .topbar__nav a {
+      display: block;
+      padding: .7rem 1.1rem;
+      font-size: .88rem;
+      color: var(--ink);
+      border-bottom: 1px solid var(--bo);
+    }
+    .topbar__nav a:last-child { border-bottom: none; }
+    .topbar__nav a:hover { background: var(--sf); color: var(--m); }
+    .topbar__nav a:first-child { font-weight: 700; color: var(--m); }
+
+    /* ── Layout ── */
+    .hub {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1.8rem 1.4rem 3rem;
+    }
+
+    /* ── Inline Chinese ── */
+    .zh {
+      font-size: 0.75em;
+      font-weight: 400;
+      color: var(--mu);
+      margin-left: 0.45em;
+    }
+
+    /* ── Headings ── */
+    h2 {
+      font-size: 1.25rem;
+      color: var(--md);
+      border-bottom: 1px solid var(--bo);
+      padding-bottom: .4rem;
+      margin-bottom: .8rem;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 2rem;
+      align-items: center;
+      padding: 1.8rem 1.6rem;
+      border: 1px solid var(--bo);
+      border-left: 4px solid var(--m);
+      border-radius: 4px;
+      background: #fff;
+      box-shadow: 0 2px 14px rgba(35,43,53,.07);
+      margin-bottom: 2.2rem;
+    }
+    .hero__eyebrow {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--mu);
+      margin-bottom: .3rem;
+    }
+    .hero__title {
+      font-size: 1.8rem;
+      line-height: 1.2;
+      color: var(--ink);
+      margin-bottom: .1rem;
+    }
+    .hero__subtitle { font-size: .88rem; color: var(--mu); margin-bottom: .9rem; }
+    .hero__desc { font-size: .95rem; line-height: 1.68; margin-bottom: .3rem; }
+    .hero__logo { width: 92px; height: 92px; object-fit: contain; opacity: .85; border-radius: 4px; }
+
+    /* ── Buttons ── */
+    .actions { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: 1.15rem; }
+    .btn {
+      display: inline-flex; align-items: center; gap: .25em;
+      min-height: 2.2rem; padding: .42rem .85rem;
+      border-radius: 4px; font-size: .84rem; font-weight: 600;
+      line-height: 1.2; white-space: nowrap;
+      transition: background .18s, border-color .18s, color .18s;
+      cursor: pointer;
+    }
+    .btn--primary { background: var(--m); border: 1.5px solid var(--m); color: #fff; }
+    .btn--primary:hover { background: var(--md); border-color: var(--md); color: #fff; }
+    .btn--primary .zh { color: rgba(255,255,255,.78); }
+    .btn--outline { background: #fff; border: 1.5px solid var(--m); color: var(--m); }
+    .btn--outline:hover { background: #fdf4f5; border-color: var(--md); color: var(--md); }
+    .btn--gold { background: #fff; border: 1.5px solid #b8920f; color: #7a5f00; }
+    .btn--gold:hover { background: #fffaeb; border-color: #7a5f00; color: #5a4400; }
+
+    /* ── Section ── */
+    .section { margin-top: 2.2rem; }
+
+    /* ── Summary banner ── */
+    .summary-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: .9rem;
+      padding: .95rem 1.15rem;
+      border: 1px solid rgba(184,146,15,.35);
+      border-left: 4px solid var(--g);
+      border-radius: 4px;
+      background: #fffaeb;
+    }
+    .summary-bar p { font-size: .93rem; }
+
+    /* ── Grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: .95rem;
+      margin-top: .85rem;
+    }
+
+    /* ── Card ── */
+    .card {
+      overflow: hidden;
+      border: 1px solid var(--bo);
+      border-radius: 4px;
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(35,43,53,.05);
+      transition: box-shadow .18s;
+    }
+    .card:hover { box-shadow: 0 4px 18px rgba(35,43,53,.1); }
+    .card__header {
+      display: flex; align-items: center; gap: .6rem;
+      padding: .6rem .8rem;
+      background: var(--sf);
+      border-bottom: 1px solid var(--bo);
+    }
+    .card__badge {
+      flex: 0 0 auto;
+      padding: .18rem .48rem;
+      border-radius: 3px;
+      background: var(--m); color: #fff;
+      font-size: .68rem; font-weight: 800; letter-spacing: .06em;
+    }
+    .card__info { flex: 1; min-width: 0; }
+    .card__name {
+      font-size: .87rem; font-weight: 600; color: var(--ink);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .card__open {
+      flex: 0 0 auto;
+      font-size: .7rem; font-weight: 700;
+      letter-spacing: .04em; color: var(--m);
+      text-transform: uppercase;
+    }
+    .card__open:hover { color: var(--md); }
+
+    /* ── Placeholder (click-to-load) ── */
+    .placeholder {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      width: 100%; height: 320px;
+      background: var(--sf);
+      border-top: 1px solid var(--bo);
+      cursor: pointer; gap: .5rem; color: var(--mu);
+      transition: background .18s, color .18s;
+      border: none;
+    }
+    .placeholder:hover { background: #edf0f4; color: var(--ink); }
+    .placeholder__icon { font-size: 1.6rem; line-height: 1; }
+    .placeholder__label { font-size: .82rem; font-weight: 600; letter-spacing: .04em; }
+
+    /* ── Loaded iframe ── */
+    .frame {
+      display: block; width: 100%; height: 320px;
+      border: 0; background: var(--sf);
+    }
+
+    /* ── Form wrap ── */
+    .form-wrap {
+      overflow: hidden; margin-top: .8rem;
+      border: 1px solid var(--bo); border-radius: 4px;
+      background: #fff; box-shadow: 0 1px 4px rgba(35,43,53,.05);
+    }
+    .form-placeholder {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      width: 100%; height: 200px;
+      background: var(--sf); cursor: pointer;
+      gap: .5rem; color: var(--mu);
+      transition: background .18s, color .18s;
+      border: none;
+    }
+    .form-placeholder:hover { background: #edf0f4; color: var(--ink); }
+    .form-placeholder__icon { font-size: 1.6rem; }
+    .form-placeholder__label { font-size: .82rem; font-weight: 600; letter-spacing: .04em; }
+    .form-frame { display: block; width: 100%; border: 0; background: var(--sf); }
+    .form-frame--upload { height: 780px; }
+    .form-frame--contact { height: 520px; }
+
+    /* ── Desc ── */
+    .desc { font-size: .95rem; line-height: 1.68; color: var(--ink); margin-bottom: .6rem; }
+
+    /* ── Disclaimer ── */
+    .disclaimer {
+      margin-top: 2.4rem; padding: .95rem 1.15rem;
+      border-left: 4px solid var(--g);
+      border-radius: 0 4px 4px 0;
+      background: #fffaeb;
+      font-size: .86rem; line-height: 1.7;
+    }
+    .disclaimer p { margin-bottom: .4rem; }
+    .disclaimer p:last-child { margin: 0; }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) {
+      .hero { grid-template-columns: 1fr; padding: 1.4rem 1.1rem; }
+      .hero__logo { width: 64px; height: 64px; order: -1; }
+      .hero__title { font-size: 1.5rem; }
+      .summary-bar { flex-direction: column; align-items: flex-start; }
+      .placeholder { height: 260px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Topbar ── -->
+<div class="topbar">
+  <button class="topbar__toggle" id="topbar-toggle" aria-expanded="false" aria-label="Open navigation">
+    <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+  </button>
+  <nav class="topbar__nav" id="topbar-nav">
+    <a href="https://ruimingmin.com/">Ruiming (Raymon) Min's Homepage</a>
+    <a href="https://ruimingmin.com/cv/">CV</a>
+    <a href="https://inclassnotesharing.github.io/">Notes Hub</a>
+  </nav>
+</div>
+
+<div class="hub">
+
+  <!-- ── Hero ── -->
+  <section class="hero" aria-labelledby="hub-title">
+    <div>
+      <p class="hero__eyebrow">Community · Free · Open</p>
+      <h1 id="hub-title" class="hero__title">Notes Hub <span class="zh">笔记集散地</span></h1>
+      <p class="hero__subtitle">Free study resources, by students for students</p>
+      <p class="hero__desc">A free, community-driven platform sharing quality study notes — compiled and uploaded by students. <span class="zh">由同学整理上传、免费共享的笔记平台，欢迎加入贡献。</span></p>
+      <div class="actions">
+        <a class="btn btn--primary" href="#notes-folders">Browse Notes <span class="zh">浏览</span></a>
+        <a class="btn btn--outline" href="#upload-notes">Upload <span class="zh">上传贡献</span></a>
+        <a class="btn btn--outline" href="#contact-notes">Contact <span class="zh">联系我们</span></a>
+        <a class="btn btn--outline" href="mailto:hkustsharing@gmail.com">Email</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Resource Summary ── -->
+  <section class="section" aria-labelledby="summary-h">
+    <h2 id="summary-h">Resource Summary <span class="zh">资源总览</span></h2>
+    <div class="summary-bar">
+      <p>All notes are organised by subject. The summary file gives a compact overview of the current collection. <span class="zh">所有笔记按科目整理，可在汇总文件中查看当前收录概况。</span></p>
+      <a class="btn btn--gold" href="https://drive.google.com/open?id=1SAncR2ng-5QUffSLt8yQNxSsdeg4zILE" target="_blank" rel="noopener">Open Summary <span class="zh">打开汇总</span> ↗</a>
+    </div>
+  </section>
+
+  <!-- ── Course Notes ── -->
+  <section id="notes-folders" class="section" aria-labelledby="folders-h">
+    <h2 id="folders-h">Course Notes <span class="zh">课程笔记</span></h2>
+    <p class="desc">Browse by subject — click any panel to load the Google Drive folder inline, or use Open ↗ to view in Drive directly. <span class="zh">按科目浏览，点击面板加载对应 Drive 文件夹，或直接点击 Open ↗ 在 Drive 中查看。</span></p>
+
+    <div class="grid">
+
+      <article class="card">
+        <header class="card__header">
+          <span class="card__badge">ACCT</span>
+          <div class="card__info"><p class="card__name">Accounting <span class="zh">会计学</span></p></div>
+          <a class="card__open" href="https://docs.google.com/folderview?id=12MelsZ5DL-ctVaajnUBEc3kcJw2V1nJC" target="_blank" rel="noopener">Open ↗</a>
+        </header>
+        <button class="placeholder" data-src="https://drive.google.com/embeddedfolderview?id=12MelsZ5DL-ctVaajnUBEc3kcJw2V1nJC#list" aria-label="Load Accounting folder">
+          <span class="placeholder__icon">📂</span>
+          <span class="placeholder__label">Click to load · 点击加载</span>
+        </button>
+      </article>
+
+      <article class="card">
+        <header class="card__header">
+          <span class="card__badge">COMP</span>
+          <div class="card__info"><p class="card__name">Computer Science <span class="zh">计算机科学</span></p></div>
+          <a class="card__open" href="https://docs.google.com/folderview?id=12L2D3ZI3e-cyHc-5fcCC2Zrn41LDR4Iz" target="_blank" rel="noopener">Open ↗</a>
+        </header>
+        <button class="placeholder" data-src="https://drive.google.com/embeddedfolderview?id=12L2D3ZI3e-cyHc-5fcCC2Zrn41LDR4Iz#list" aria-label="Load Computer Science folder">
+          <span class="placeholder__icon">📂</span>
+          <span class="placeholder__label">Click to load · 点击加载</span>
+        </button>
+      </article>
+
+      <article class="card">
+        <header class="card__header">
+          <span class="card__badge">ECON</span>
+          <div class="card__info"><p class="card__name">Economics <span class="zh">经济学</span></p></div>
+          <a class="card__open" href="https://docs.google.com/folderview?id=12ZuIwbXBE821Qtv8vrYjy32gKqWqpyJI" target="_blank" rel="noopener">Open ↗</a>
+        </header>
+        <button class="placeholder" data-src="https://drive.google.com/embeddedfolderview?id=12ZuIwbXBE821Qtv8vrYjy32gKqWqpyJI#list" aria-label="Load Economics folder">
+          <span class="placeholder__icon">📂</span>
+          <span class="placeholder__label">Click to load · 点击加载</span>
+        </button>
+      </article>
+
+      <article class="card">
+        <header class="card__header">
+          <span class="card__badge">FINA</span>
+          <div class="card__info"><p class="card__name">Finance <span class="zh">金融学</span></p></div>
+          <a class="card__open" href="https://docs.google.com/folderview?id=12bU-g5gVSgkWGrYbHgIRFQ_dhi8Gbxck" target="_blank" rel="noopener">Open ↗</a>
+        </header>
+        <button class="placeholder" data-src="https://drive.google.com/embeddedfolderview?id=12bU-g5gVSgkWGrYbHgIRFQ_dhi8Gbxck#list" aria-label="Load Finance folder">
+          <span class="placeholder__icon">📂</span>
+          <span class="placeholder__label">Click to load · 点击加载</span>
+        </button>
+      </article>
+
+      <article class="card">
+        <header class="card__header">
+          <span class="card__badge">HUMA</span>
+          <div class="card__info"><p class="card__name">Humanities <span class="zh">人文学科</span></p></div>
+          <a class="card__open" href="https://docs.google.com/folderview?id=1324kSKIGhEC_Mn2RCPkoLdigGYO2CVsB" target="_blank" rel="noopener">Open ↗</a>
+        </header>
+        <button class="placeholder" data-src="https://drive.google.com/embeddedfolderview?id=1324kSKIGhEC_Mn2RCPkoLdigGYO2CVsB#list" aria-label="Load Humanities folder">
+          <span class="placeholder__icon">📂</span>
+          <span class="placeholder__label">Click to load · 点击加载</span>
+        </button>
+      </article>
+
+      <article class="card">
+        <header class="card__header">
+          <span class="card__badge">ISOM</span>
+          <div class="card__info"><p class="card__name">Info. Systems &amp; Operations Mgmt <span class="zh">信息系统与商业管理</span></p></div>
+          <a class="card__open" href="https://docs.google.com/folderview?id=132fGaUkqhywkjAnxENEha0C38YlLUNVZ" target="_blank" rel="noopener">Open ↗</a>
+        </header>
+        <button class="placeholder" data-src="https://drive.google.com/embeddedfolderview?id=132fGaUkqhywkjAnxENEha0C38YlLUNVZ#list" aria-label="Load ISOM folder">
+          <span class="placeholder__icon">📂</span>
+          <span class="placeholder__label">Click to load · 点击加载</span>
+        </button>
+      </article>
+
+      <article class="card">
+        <header class="card__header">
+          <span class="card__badge">LIFS</span>
+          <div class="card__info"><p class="card__name">Life Science <span class="zh">生命科学</span></p></div>
+          <a class="card__open" href="https://docs.google.com/folderview?id=12nxWRwQSIufsQs2iImooUGOeSW4WzeMN" target="_blank" rel="noopener">Open ↗</a>
+        </header>
+        <button class="placeholder" data-src="https://drive.google.com/embeddedfolderview?id=12nxWRwQSIufsQs2iImooUGOeSW4WzeMN#list" aria-label="Load Life Science folder">
+          <span class="placeholder__icon">📂</span>
+          <span class="placeholder__label">Click to load · 点击加载</span>
+        </button>
+      </article>
+
+      <article class="card">
+        <header class="card__header">
+          <span class="card__badge">MATH</span>
+          <div class="card__info"><p class="card__name">Mathematics <span class="zh">数学</span></p></div>
+          <a class="card__open" href="https://docs.google.com/folderview?id=12ERTRI-fTX2ji7egqX7RWs20RUeyaPGp" target="_blank" rel="noopener">Open ↗</a>
+        </header>
+        <button class="placeholder" data-src="https://drive.google.com/embeddedfolderview?id=12ERTRI-fTX2ji7egqX7RWs20RUeyaPGp#list" aria-label="Load Mathematics folder">
+          <span class="placeholder__icon">📂</span>
+          <span class="placeholder__label">Click to load · 点击加载</span>
+        </button>
+      </article>
+
+      <article class="card">
+        <header class="card__header">
+          <span class="card__badge">PHYS</span>
+          <div class="card__info"><p class="card__name">Physics <span class="zh">物理学</span></p></div>
+          <a class="card__open" href="https://docs.google.com/folderview?id=12KTAzyoaFX6S00wClKUCOfN28JuEcww9" target="_blank" rel="noopener">Open ↗</a>
+        </header>
+        <button class="placeholder" data-src="https://drive.google.com/embeddedfolderview?id=12KTAzyoaFX6S00wClKUCOfN28JuEcww9#list" aria-label="Load Physics folder">
+          <span class="placeholder__icon">📂</span>
+          <span class="placeholder__label">Click to load · 点击加载</span>
+        </button>
+      </article>
+
+      <article class="card">
+        <header class="card__header">
+          <span class="card__badge">SOSC</span>
+          <div class="card__info"><p class="card__name">Social Science <span class="zh">社会科学</span></p></div>
+          <a class="card__open" href="https://docs.google.com/folderview?id=12wiB5jTn0KfcbR5WliPwGl_6fTQLywH3" target="_blank" rel="noopener">Open ↗</a>
+        </header>
+        <button class="placeholder" data-src="https://drive.google.com/embeddedfolderview?id=12wiB5jTn0KfcbR5WliPwGl_6fTQLywH3#list" aria-label="Load Social Science folder">
+          <span class="placeholder__icon">📂</span>
+          <span class="placeholder__label">Click to load · 点击加载</span>
+        </button>
+      </article>
+
+      <article class="card">
+        <header class="card__header">
+          <span class="card__badge">Other</span>
+          <div class="card__info"><p class="card__name">Other Notes <span class="zh">其他科目</span></p></div>
+          <a class="card__open" href="https://docs.google.com/folderview?id=1jProhtjv_wIX6mcMF3ZK99D9D1fYb4yn" target="_blank" rel="noopener">Open ↗</a>
+        </header>
+        <button class="placeholder" data-src="https://drive.google.com/embeddedfolderview?id=1jProhtjv_wIX6mcMF3ZK99D9D1fYb4yn#list" aria-label="Load Other Notes folder">
+          <span class="placeholder__icon">📂</span>
+          <span class="placeholder__label">Click to load · 点击加载</span>
+        </button>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ── Upload ── -->
+  <section id="upload-notes" class="section" aria-labelledby="upload-h">
+    <h2 id="upload-h">Upload Notes <span class="zh">上传笔记</span></h2>
+    <p class="desc">Contribute your course notes to help the community grow. Files go to a private queue and will be published after review. <span class="zh">欢迎贡献笔记，文件将进入私有待审队列，审核后发布。</span></p>
+    <div class="form-wrap">
+      <button class="form-placeholder"
+              data-src="https://script.google.com/macros/s/AKfycbxtn_tZVVMuqAzhlc4dXPG5ESQGV7mbIV__PPohZoA1bSg-ADvW2Mv-zhCXo4aRFfa1/exec"
+              data-height="780"
+              aria-label="Load upload form">
+        <span class="form-placeholder__icon">📤</span>
+        <span class="form-placeholder__label">Click to load upload form · 点击加载上传表单</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ── Contact ── -->
+  <section id="contact-notes" class="section" aria-labelledby="contact-h">
+    <h2 id="contact-h">Contact <span class="zh">联系我们</span></h2>
+    <p class="desc">For any questions, reach us via the form below or by email at <a href="mailto:hkustsharing@gmail.com">hkustsharing@gmail.com</a>. <span class="zh">如有问题请通过下方表单或邮件联系。</span></p>
+    <div class="form-wrap">
+      <button class="form-placeholder"
+              data-src="https://script.google.com/macros/s/AKfycbxtn_tZVVMuqAzhlc4dXPG5ESQGV7mbIV__PPohZoA1bSg-ADvW2Mv-zhCXo4aRFfa1/exec?page=contact"
+              data-height="520"
+              aria-label="Load contact form">
+        <span class="form-placeholder__icon">✉️</span>
+        <span class="form-placeholder__label">Click to load contact form · 点击加载联系表单</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ── Disclaimer ── -->
+  <aside class="disclaimer" role="note">
+    <p><strong>One for all, all for one.</strong></p>
+    <p>Notes on this platform are compiled by contributors during their studies. If any content infringes copyright, please contact us immediately. All content remains the property of its creators; this platform is a distribution channel only. Notes are for educational use only — commercial use is strictly prohibited. <span class="zh">本集散地笔记由同学整理上传，版权归制作者，如涉侵权请联系处理，仅供学习研究，禁止商用。</span></p>
+  </aside>
+
+</div>
+
+<script>
+(function () {
+  // Topbar toggle
+  var toggle = document.getElementById('topbar-toggle');
+  var nav    = document.getElementById('topbar-nav');
+  toggle.addEventListener('click', function () {
+    var open = nav.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', open);
+  });
+  document.addEventListener('click', function (e) {
+    if (!toggle.contains(e.target) && !nav.contains(e.target)) {
+      nav.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  // Click-to-load: Drive folder iframes
+  document.querySelectorAll('.placeholder').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var iframe = document.createElement('iframe');
+      iframe.className = 'frame';
+      iframe.src = btn.dataset.src;
+      iframe.title = btn.getAttribute('aria-label') || '';
+      btn.parentNode.replaceChild(iframe, btn);
+    });
+  });
+
+  // Click-to-load: GAS form iframes
+  document.querySelectorAll('.form-placeholder').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var iframe = document.createElement('iframe');
+      iframe.className = 'form-frame';
+      iframe.src = btn.dataset.src;
+      iframe.style.height = (btn.dataset.height || '600') + 'px';
+      iframe.title = btn.getAttribute('aria-label') || '';
+      btn.parentNode.replaceChild(iframe, btn);
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
