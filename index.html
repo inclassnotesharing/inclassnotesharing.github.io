@@ -39,48 +39,15 @@
       box-shadow: 0 1px 4px rgba(35,43,53,.07);
       z-index: 1000;
     }
-    .topbar__toggle {
+    .topbar__brand {
       position: absolute;
-      top: 50%; left: 1rem;
+      top: 50%; left: 1.1rem;
       transform: translateY(-50%);
-      width: 38px; height: 38px;
-      background: var(--m);
-      border: none; border-radius: 4px;
-      cursor: pointer;
-      display: flex; flex-direction: column;
-      justify-content: center; align-items: center;
-      gap: 5px; padding: 0;
+      font-size: .9rem;
+      font-weight: 700;
+      color: var(--m);
+      letter-spacing: .01em;
     }
-    .topbar__toggle .bar {
-      display: block; width: 16px; height: 2px;
-      background: #fff; border-radius: 1px;
-      transition: transform .2s, opacity .2s;
-    }
-    .topbar__toggle[aria-expanded="true"] .bar:nth-child(1) { transform: rotate(45deg) translate(5px,5px); }
-    .topbar__toggle[aria-expanded="true"] .bar:nth-child(2) { opacity: 0; }
-    .topbar__toggle[aria-expanded="true"] .bar:nth-child(3) { transform: rotate(-45deg) translate(5px,-5px); }
-    .topbar__nav {
-      display: none;
-      position: absolute;
-      top: 48px; left: 0;
-      min-width: 240px;
-      background: #fff;
-      border: 1px solid var(--bo);
-      border-top: none;
-      border-radius: 0 4px 4px 4px;
-      box-shadow: 0 4px 14px rgba(35,43,53,.1);
-    }
-    .topbar__nav.open { display: block; }
-    .topbar__nav a {
-      display: block;
-      padding: .7rem 1.1rem;
-      font-size: .88rem;
-      color: var(--ink);
-      border-bottom: 1px solid var(--bo);
-    }
-    .topbar__nav a:last-child { border-bottom: none; }
-    .topbar__nav a:hover { background: var(--sf); color: var(--m); }
-    .topbar__nav a:first-child { font-weight: 700; color: var(--m); }
 
     /* ── Layout ── */
     .hub {
@@ -287,14 +254,7 @@
 
 <!-- ── Topbar ── -->
 <div class="topbar">
-  <button class="topbar__toggle" id="topbar-toggle" aria-expanded="false" aria-label="Open navigation">
-    <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-  </button>
-  <nav class="topbar__nav" id="topbar-nav">
-    <a href="https://ruimingmin.com/">Ruiming (Raymon) Min's Homepage</a>
-    <a href="https://ruimingmin.com/cv/">CV</a>
-    <a href="https://inclassnotesharing.github.io/">Notes Hub</a>
-  </nav>
+  <span class="topbar__brand">Notes Hub · 笔记集散地</span>
 </div>
 
 <div class="hub">
@@ -506,20 +466,6 @@
 
 <script>
 (function () {
-  // Topbar toggle
-  var toggle = document.getElementById('topbar-toggle');
-  var nav    = document.getElementById('topbar-nav');
-  toggle.addEventListener('click', function () {
-    var open = nav.classList.toggle('open');
-    toggle.setAttribute('aria-expanded', open);
-  });
-  document.addEventListener('click', function (e) {
-    if (!toggle.contains(e.target) && !nav.contains(e.target)) {
-      nav.classList.remove('open');
-      toggle.setAttribute('aria-expanded', 'false');
-    }
-  });
-
   // Click-to-load: Drive folder iframes
   document.querySelectorAll('.placeholder').forEach(function (btn) {
     btn.addEventListener('click', function () {
